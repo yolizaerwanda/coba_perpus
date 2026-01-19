@@ -2,17 +2,7 @@ pipeline {
     agent any
 
     tools {
-        // Pastikan nama Maven sama dengan di:
-        // Manage Jenkins → Tools → Global Tool Configuration
         maven 'Maven3'
-    }
-
-    options {
-        timestamps()
-    }
-
-    environment {
-        MAVEN_OPTS = '-Dmaven.repo.local=.m2/repository'
     }
 
     stages {
@@ -23,11 +13,9 @@ pipeline {
             }
         }
 
-        // ================= BUILD =================
+        // ========== BUILD ==========
         stage('Build All Services') {
             parallel {
-                failFast true
-
                 stage('Build Anggota') {
                     steps {
                         dir('anggota') {
@@ -66,11 +54,9 @@ pipeline {
             }
         }
 
-        // ================= TEST =================
+        // ========== TEST ==========
         stage('Test All Services') {
             parallel {
-                failFast true
-
                 stage('Test Anggota') {
                     steps {
                         dir('anggota') {
@@ -112,25 +98,10 @@ pipeline {
 
     post {
         success {
-            echo '''
-═══════════════════════════════════════════════
-✅ BUILD & TEST SUCCESSFUL
-═══════════════════════════════════════════════
-✔ Anggota Service
-✔ Buku Service
-✔ Peminjaman Service
-✔ Pengembalian Service
-
-📦 Jalankan deployment secara terpisah:
-docker compose up -d
-═══════════════════════════════════════════════
-'''
+            echo '✅ BUILD & TEST SUCCESSFUL'
         }
         failure {
-            echo '❌ BUILD OR TEST FAILED! Check logs above.'
-        }
-        always {
-            echo "🔄 Pipeline finished at: ${new Date().format('yyyy-MM-dd HH:mm:ss')}"
+            echo '❌ BUILD OR TEST FAILED'
         }
     }
 }
