@@ -1,13 +1,20 @@
 pipeline {
     agent any
-    
+
     tools {
-        // 💡 PASTIKAN: Nama 'MAVEN' sesuai dengan yang ada di 
-        // Manage Jenkins -> Tools -> Global Tool Configuration
+        // Pastikan nama Maven sama dengan di:
+        // Manage Jenkins → Tools → Global Tool Configuration
         maven 'Maven3'
-        // Menggunakan Java bawaan dari Jenkins container (tidak perlu konfigurasi JDK terpisah)
     }
-    
+
+    options {
+        timestamps()
+    }
+
+    environment {
+        MAVEN_OPTS = '-Dmaven.repo.local=.m2/repository'
+    }
+
     stages {
         stage('Checkout') {
             steps {
@@ -15,76 +22,86 @@ pipeline {
                 checkout scm
             }
         }
-        
-        // ====== BUILD STAGE ======
+
+        // ================= BUILD =================
         stage('Build All Services') {
             parallel {
+                failFast true
+
                 stage('Build Anggota') {
                     steps {
-                        echo '🔨 Building Anggota Service...'
                         dir('anggota') {
+                            echo '🔨 Building Anggota Service...'
                             bat 'mvn clean package -DskipTests'
                         }
                     }
                 }
+
                 stage('Build Buku') {
                     steps {
-                        echo '🔨 Building Buku Service...'
                         dir('buku') {
+                            echo '🔨 Building Buku Service...'
                             bat 'mvn clean package -DskipTests'
                         }
                     }
                 }
+
                 stage('Build Peminjaman') {
                     steps {
-                        echo '🔨 Building Peminjaman Service...'
                         dir('peminjaman') {
+                            echo '🔨 Building Peminjaman Service...'
                             bat 'mvn clean package -DskipTests'
                         }
                     }
                 }
+
                 stage('Build Pengembalian') {
                     steps {
-                        echo '🔨 Building Pengembalian Service...'
                         dir('pengembalian') {
+                            echo '🔨 Building Pengembalian Service...'
                             bat 'mvn clean package -DskipTests'
                         }
                     }
                 }
             }
         }
-        
-        // ====== TEST STAGE ======
+
+        // ================= TEST =================
         stage('Test All Services') {
             parallel {
+                failFast true
+
                 stage('Test Anggota') {
                     steps {
-                        echo '🧪 Testing Anggota Service...'
                         dir('anggota') {
+                            echo '🧪 Testing Anggota Service...'
                             bat 'mvn test'
                         }
                     }
                 }
+
                 stage('Test Buku') {
                     steps {
-                        echo '🧪 Testing Buku Service...'
                         dir('buku') {
+                            echo '🧪 Testing Buku Service...'
                             bat 'mvn test'
                         }
                     }
                 }
+
                 stage('Test Peminjaman') {
                     steps {
-                        echo '🧪 Testing Peminjaman Service...'
                         dir('peminjaman') {
+                            echo '🧪 Testing Peminjaman Service...'
                             bat 'mvn test'
                         }
                     }
                 }
+
                 stage('Test Pengembalian') {
                     steps {
-                        echo '🧪 Testing Pengembalian Service...'
                         dir('pengembalian') {
+                            echo '🧪 Testing Pengembalian Service...'
                             bat 'mvn test'
                         }
                     }
@@ -92,32 +109,28 @@ pipeline {
             }
         }
     }
-    
+
     post {
         success {
             echo '''
-            ═══════════════════════════════════════════════════════
-            ✅ BUILD & TEST SUCCESSFUL!
-            ═══════════════════════════════════════════════════════
-            
-            All 4 microservices have been built and tested:
-               ✅ Anggota Service
-               ✅ Buku Service  
-               ✅ Peminjaman Service
-               ✅ Pengembalian Service
-            
-            📝 NOTE: Untuk deployment, jalankan docker-compose secara
-               terpisah dari mesin lokal Anda:
-               
-               docker compose up -d
-            ═══════════════════════════════════════════════════════
-            '''
+═══════════════════════════════════════════════
+✅ BUILD & TEST SUCCESSFUL
+═══════════════════════════════════════════════
+✔ Anggota Service
+✔ Buku Service
+✔ Peminjaman Service
+✔ Pengembalian Service
+
+📦 Jalankan deployment secara terpisah:
+docker compose up -d
+═══════════════════════════════════════════════
+'''
         }
         failure {
-            echo '❌ BUILD OR TEST FAILED! Check the logs above for details.'
+            echo '❌ BUILD OR TEST FAILED! Check logs above.'
         }
         always {
-            echo "🔄 Pipeline completed at: ${new Date().format('yyyy-MM-dd HH:mm:ss')}"
+            echo "🔄 Pipeline finished at: ${new Date().format('yyyy-MM-dd HH:mm:ss')}"
         }
     }
 }
